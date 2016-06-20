@@ -1,0 +1,126 @@
+;; from:  http://www.cs.northwestern.edu/~forbus/cs395_kr/Lectures/qp-theory-v2.txt
+;; Version 2
+;; This set of definitions describes some fundamentals of QP theory
+;; in Cyc.  It works around some oddities in their current ways of 
+;; handling qualitative physics.
+
+;; Fundamental concepts
+;;
+;; Cyc currently defines PhysicalQuantity as values, rather than the 
+;; quantities themselves.  It would be more accurate to replace
+;; PhysicalQuantity with PhysicalQuantityValue, and the quantity names
+;; e.g., Area, Temperature, etc. with AreaValue, TemperatureValue, etc.
+;; For now we work around this by introducing ContinuousQuantity, which
+;; captures the QP notion of quantity.  Note that since QP theory can
+;; be used to describe economics and other continuous phenomena that aren't
+;; physical, this is somewhat better for our purposes.
+
+default Mt: BaseKB.
+;; Should move definitions into UniversalVocabularyMt and
+;; the axioms into a QPTheoryMt.  Later...
+
+;;;; Quantities
+
+Constant: ContinuousQuantity.
+isa: Collection.
+genls: Thing.
+comment: "Continuous parameters represent properties such as temperature, heat, price, etc.  Typically they are tied to some particular entity or situation.  Depending on their type, they could have temporal or spatial derivatives.  Continuity applies to them, and they are dense.".
+;; Yes, it should be something other than thing.  They're fluents, really,
+;; but I'm not quite sure where to put this.  Also, we need to think about
+;; putting in some of the quantizations of parameter here which are continuous
+;; but not dense, e.g., the sign algebra.
+
+Constant: ContinuousQuantityDenotingFunction.
+isa: Collection.
+genls: Function-Denotational VariableArityRelation.
+;; There is probably some concise way to say these next three facts as GAFs.
+F: (implies (isa ?fn ContinuousQuantityDenotingFunction) (argsIsa ?fn Thing)).
+F: (implies (isa ?fn ContinuousQuantityDenotingFunction) (resultIsa ?fn ContinuousQuantity)).
+F: (implies (isa ?fn ContinuousQuantityDenotingFunction) (isa ?fn VariableArityFunction)).
+comment: "An instance of ContinuousQuantityDenotingFunction has as its range ContinuousQuantity and its domain some number of things.  Instances are constructed by QPQuantityFn.".
+
+Constant: QPQuantityFn.
+isa: Function-Denotational.
+resultIsa: ContinuousQuantityDenotingFunction.
+comment: "(QPQuantityFn <ValueType>) maps from a ContinuousQuantityValue (what Cyc currently calls a PhysicalQuantity) to function whose range is ContinuousQuantity and whose domain consists of entities.  For example, ((QPQuantityFn Temperature) kettle12) in this representation is what in systems of qualitative physics would be written (Temperature kettle12).".
+
+;;;; Processes
+;;
+
+
+
+Constant: QPProcess.
+isa: Collection.
+genls: SomethingExisting Intangible SpatialThing-Localized Individual.
+comment: "QP Processes are a kind of mechanism, Nature's version of agents.
+They cause changes in the world, and provide a notion of mechanism
+that underlies causality in many domains.  The kinds of physical
+processes that QP theory captures have their direct effects on
+continuous parameters, and when active, are continually acting.  They
+are not tangible, but arise because of the configurations of the
+things that they act between or upon.  They are spatially localized,
+in that they are considered to have as their location the union of
+their participants.  They are temporal, since they act over time.".
+
+Constant: ActiveQPProcess.
+isa: UnaryRelation.
+comment: "(ActiveQPProcess ?p) means that ?p is active.  This occurs only when
+its participants all exist, the configurational constraints hold, and
+the conditions are true.  When a QPProcess is active, its consequences
+hold.  These tend to be direct influences, and the changes they cause
+directly and indirectly constitute the causal effects of the process.".
+
+;;;; Qualitative Mathematics
+;;
+;;In Cyc, there are some slot-level approximations to QP primitives, e.g., 
+;; positivelyDependsOn is roughly qprop, dependsOn-Pairwise is a way of stating
+;; qprop and qprop- by means of changing the third argument (simplifies
+;; queries no doubt).  These seem to be introduced for the HPKB CM CP and
+;; don't seem to be used outside of it.  Nicely done in many ways, but the
+;; use of slots instead of quantities makes it a bit cumbersome.
+
+Constant: qprop.
+isa: TernaryPredicate.
+arg1Isa: ContinuousQuantity.
+arg2Isa: ContinuousQuantity.
+comment: "(qprop ?A ?B ?source) means that there exists a function which determines ?A, depends at least on ?B, and is increasing monotonic in its dependence on ?B.  The ?source argument indicates which entity (conceptual or physical) contributed the relationship; this information is needed to distinguish between qualitative proportionalities constraining the same parameters via different descriptions.  Note that ?A may depend on other parameters as well, hence closed-world assumptions are needed to reason about parameter changes.  This is the weakest information that suffices to say, if ?B is going up then, all else being equal, ?A will go up, and if ?B goes down, then ?A will go down. See also qprop-.".
+
+Constant: qprop-.
+isa: TernaryPredicate.
+arg1Isa: ContinuousQuantity.
+arg2Isa: ContinuousQuantity.
+comment: "(qprop- ?A ?B ?source) means that there exists a function which determines ?A, depends at least on ?B, and is decreasing monotonic in its dependence on ?B.  The ?source argument indicates which entity (conceptual or physical) contributed the relationship; this information is needed to distinguish between qualitative proportionalities constraining the same parameters via different descriptions.  Note that ?A may depend on other parameters as well, hence closed-world assumptions are needed to reason about parameter changes.  This is the weakest information that suffices to say, if ?B is going up then, all else being equal, ?A will go up, and if ?B goes down, then ?A will go down. See also qprop.".
+
+Constant: qGreaterThan.
+isa: AntiSymmetricBinaryPredicate.
+arg1Isa: ContinuousQuantity.
+arg2Isa: ContinuousQuantity.
+comment: "(qGreaterThan ?q1 ?q2) means that the value of ?q1 is greater than the value of ?q2.".
+
+Constant: qLessThan.
+isa: AntiSymmetricBinaryPredicate.
+arg1Isa: ContinuousQuantity.
+arg2Isa: ContinuousQuantity.
+comment: "(qLessThan ?q1 ?q2) means that the value of ?q1 is less than the value of ?q2.".
+
+Constant: qEqualTo.
+isa: ReflexiveBinaryPredicate SymmetricBinaryPredicate.
+arg1Isa: ContinuousQuantity.
+arg2Isa: ContinuousQuantity.
+comment: "(qEqualTo ?q1 ?q2) means that the value of ?q1 is equal to the value of ?q2.".
+
+Constant: directInfluencePostive.
+isa:TernaryPredicate.
+arg1Isa: ContinuousQuantity.
+arg2Isa: ContinuousQuantity.
+arg3Isa: QPProcess.
+comment: "directInfluencePositive is QP theory's I+.  (I+ ?c ?r ?s) means that D[?c] = ... + ?r + ...., with a non-zero value for ?r causing changes in ?c.  This is a derivative operator, and the use of addition instead of an unspecified function for combining effects makes it possible to reason about dynamic equilibria.  The source argument (?s) enables us to distinguish contributions from different processes.".
+
+Constant: directInfluenceNegative.
+isa:TernaryPredicate.
+arg1Isa: ContinuousQuantity.
+arg2Isa: ContinuousQuantity.
+arg3Isa: QPProcess.
+comment: "directInfluenceNegative is QP theory's I-.  (I- ?c ?r ?s) means that D[?c] = ... - ?r + ...., with a non-zero value for ?r causing changes in ?c.  This is a derivative operator, and the use of addition instead of an unspecified function for combining effects makes it possible to reason about dynamic equilibria.  The source argument (?s) enables us to distinguish contributions from different processes.".
+
+
